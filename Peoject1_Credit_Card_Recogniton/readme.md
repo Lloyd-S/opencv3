@@ -6,11 +6,11 @@ This project aims to recognize the 16-digit card number of 8 different credit ca
 
 For card 1-7, this project successfully detect all 16 digits on each card. Below shows all the results:
 
-![avatar](F:\Github\opencv3\Peoject1_Credit_Card_Recogniton\results\Results1to7.png)
+![avatar](https://github.com/Lloyd-S/opencv3/blob/master/Peoject1_Credit_Card_Recogniton/results/Results1to7.png)
 
 For card 8, this project fails to recognize all the digits. The best one correctly detects  5 digits out of 16. The corresponding code is in file **'unsloved_card8.py'**. Below shows the 'best' result:
 
-![](F:\Github\opencv3\Peoject1_Credit_Card_Recogniton\results\res8.png)
+![avatar](https://github.com/Lloyd-S/opencv3/blob/master/Peoject1_Credit_Card_Recogniton/results/res8.png)
 
 This project is a good start for someone(like me) who just begin their learning path in opencv and computer vision, and only requires some basic understanding of image operations, including:
 
