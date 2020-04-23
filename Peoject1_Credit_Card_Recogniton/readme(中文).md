@@ -6,11 +6,11 @@
 
 已成功识别前七张图片，如下所示：
 
-<img src="F:\VSCode_files\project_credit_card\results\Results1to7.png" style="zoom: 80%;" />
+![avatar](https://github.com/Lloyd-S/opencv3/blob/master/Peoject1_Credit_Card_Recogniton/results/Results1to7.png)
 
 第八章图片经过调试后，最多成功识别（可以成功定位每个数字的位置）5个数字，如下所示：
 
-<img src="F:\VSCode_files\project_credit_card\results\res8.png" style="zoom:80%;" />
+![avatar](https://github.com/Lloyd-S/opencv3/blob/master/Peoject1_Credit_Card_Recogniton/results/res8.png)
 
 ## 2.程序的设计
 
