@@ -87,13 +87,16 @@ def match_template_blackhat(locs,digits,iters=2):
     return results
 
 #Stage Four: Visualize the results
-def draw_digits(image,results,locs): 
+def draw_digits(image,results,locs,individual=False): 
     count = []
-    for (i, (x, y, w, h)) in enumerate(locs):    
-        conditon = i%4
-        if conditon == 0:
-            x_begin = x
-            cv2.rectangle(image, (x_begin, y-5),(x_begin + 4*w+10, y + h+10), (0, 0, 255), 2)
+    for (i, (x, y, w, h)) in enumerate(locs):
+        if individual:
+            cv2.rectangle(img, (x, y),(x + w, y + h), (0, 0, 255), 2)    
+        else:    
+            conditon = i%4
+            if conditon == 0:
+                x_begin = x
+                cv2.rectangle(image, (x_begin, y-5),(x_begin + 4*w+10, y + h+10), (0, 0, 255), 2)
         cv2.putText(img, "".join(results[i:(i+1)]), (x, y - 15),cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 0, 255), 2)
     cv2.imshow('res',img)
     cv2.waitKey(0)
@@ -129,7 +132,7 @@ if len(locs) != 16: #for card 2
     cnt = blackhat(roi)
     locs = get_locs(cnt)
     results = match_template_blackhat(locs,digits)
-if len(locs) != 16: #for card 7
+if (len(locs) != 16) and ('7.jpg' in file_name): #for card 7
     #devide the images into 3 the ROI: 
     #roi_1 and roi_3 have dark background, which can be dealt with tophat; while roi_2 have bright background(), which is processed by canny edge detection.
     #  
@@ -199,9 +202,49 @@ if len(locs) != 16: #for card 7
             results.append(str(np.argmax(sorts)))
         return results
     results = match_template_pic7(locs,digits)
-if len(locs) != 16: #for card 8
-    pass
-#unsloved. Best experiment recogise 5 digits out of 16. See 'unsloved_card8.py'.
+if len(locs) != 16: #for card 8--unsloved. Best experiment recogise 5 digits out of 16.
+    rectKernel=cv2.getStructuringElement(cv2.MORPH_RECT,(7,7))
+    sqKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7,7))
+    def canny_dilate(roi):
+        canny = cv2.Canny(roi,200,250)
+        dilate = cv2.dilate(canny,sqKernel,iterations=2)
+        cnt = cv2.findContours(dilate,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)[0]
+        return cnt
+    def find_locs(cnt):
+        loc = []
+        for i in cnt:   
+            x,y,w,h = cv2.boundingRect(i)
+            if w*h>1000:
+                loc.append((x,y+135,w,h))
+        loc = sorted(loc, key=lambda x: x[0], reverse=False)
+        (x_0,y_0,w_0,h_0) = loc[0]
+        (x_1,y_1,w_1,h_1) = loc[1]
+        locs = []
+        for i in range(4):
+            for j in range(4):
+                temp_tuple = (int(x_0+j*w_0/4+i*(x_1-x_0)),y_0,int(w_0/4),h_0)
+                locs.append(temp_tuple)
+        return locs
+    def template_match_pic8(locs,digits):
+        results = []
+        for i,(x,y,w,h) in enumerate(locs):
+            image = gray[y-1:y+h+1,x-1:x+w+1]
+            hat2 = cv2.morphologyEx(image,cv2.MORPH_BLACKHAT,rectKernel,iterations=2)
+            thresh2 = cv2.threshold(hat2,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
+            dst = thresh2
+            dst = cv2.resize(dst,(48,64))       
+            sorts = []
+            for j,temp in enumerate(digits.values()):
+                result = cv2.matchTemplate(dst,temp,cv2.TM_CCORR)
+                min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+                sorts.append(max_val)
+            results.append(str(np.argmax(sorts)))    
+        return results
 
+    cnt = canny_dilate(roi)
+    locs = find_locs(cnt)
+    results = template_match_pic8(locs,digits)    
+    draw_digits(img,results,locs,True)
 #step3: result visualization
-draw_digits(img,results,locs)
+if '8.jpg' not in file_name:
+    draw_digits(img,results,locs)
