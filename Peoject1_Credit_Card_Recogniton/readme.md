@@ -2,7 +2,7 @@
 
 ### 1.Brief Introduction
 
-This project,which was guided by my supervisor Aopu, aims to recognize the 16-digit card number of 8 different credit card (card 1 to 8 as file name indicates) with opencv-python(cv2 verision:4.2.0.34) . You can find the image of each card in the folder named 'img'.
+This project, which was guided by my supervisor Aopu, aims to recognize the 16-digit card number of 8 different credit card (card 1 to 8 as file name indicates) with opencv-python(cv2 verision:4.2.0.34) . You can find the image of each card in the folder named 'img'.
 
 For card 1-7, this project successfully detect all 16 digits on each card. Below shows all the results:
 
