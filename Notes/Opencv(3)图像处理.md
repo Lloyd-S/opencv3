@@ -636,7 +636,7 @@ pprint(M)
 
 - cv2.contourArea(), or M['m00']
 
-```
+```python
 area=cv2.contourArea(cnt)
 ```
 
@@ -823,7 +823,7 @@ min_val,max_val,min_loc,mac_loc = cv2.minMaxLoc(imgrey,mask=mask)
 
 - 平均颜色|平均灰度
 
-```
+```python
 mean_val = cv2.mean(imgrey|img, mask=mask)
 ```
 
@@ -840,27 +840,245 @@ bottom = tuple(cnt[cnt[:,:,1].argmax()][0])
 
 [top](#Opencv(3)图像处理)
 
+#### 8.4.1 凸缺陷
 
+cv2.convexHull(points[, hull[, clockwise[, returnPoints]]]) -> hull
 
+hull = (起点，终点，最远的点，到最远点的近似距离)
 
+```python
+hull = cv2.convexHull(cnt, returnPoints=False)
+defects = cv2.convexityDefects(cnt, hull)
+```
 
+ps: returnPoints的值一定是False
 
+#### 8.4.2 Point ploygon test
 
+点到contour的最短距离（在轮廓外，为负值）
 
+```python
+dist = cv2.pointPolygonTest(cnt,(30,50), True)
+```
 
+#### 8.4.3 形状匹配
 
+匹配轮廓形状，返回值越小，匹配越好（根据hu矩计算）
 
+```python
+ret = cv2.matchShapes(cnt1,cnt2,1,0,0)
+```
 
+### 8.5 hierarchy
 
+contours, hierarchy = cv2.findContours(thresh, **cv2.RETR_TREE**, cv2.CHAIN_APPROX_NONE)
 
+2nd args - Flags：
 
+- cv2.RETR_LIST: 提取所有contour，不建立父子关系
+- cv2.RETR_TREE: 所有信息
+- cv2.RETR_CCOMP：所有轮廓分为两级结构，外部为1，内部为2
+- cv2.RETR_EXTERNAL: 只返回最外面contour
 
+**PS：return value  - (Next(same level), previous, First_child, parent)**
 
+**if no parent, parent arg = -1**
 
+## 9.Histogram
 
+[top](#Opencv(3)图像处理)
 
+### 9.1直方图与绘制（plt）
 
+- 计算直方图
 
+```python
+hist = cv2.calcHist([img],[0],None,[256],[0,256])
+```
+
+- 绘制（cv2方法比较麻烦）
+
+```python
+import cv2
+from matplotlib import pyplot as plt
+
+img = cv2.imread('opencv/data/airline.jpg')
+hist = cv2.calcHist([img], [0], None, [256], [0, 256])
+plt.plot(hist)
+plt.show()
+```
+
+### 9.2Mask 
+
+```python
+# create a mask
+mask = np.zeros(img.shape[:2], np.uint8)
+mask[100:300, 100:400] = 255
+#bitwise_and(src1, src2[, dst[, mask]]) -> dst
+masked_img = cv2.bitwise_and(img, img, mask=mask)
+
+hist_mask = cv2.calcHist([img], [0], mask, [256], [0, 256])
+plt.plot(hist_mask)
+plt.xlim([0, 256])
+plt.show()
+```
+
+### 9.3[直方图均衡化](https://zh.wikipedia.org/wiki/%E7%9B%B4%E6%96%B9%E5%9B%BE%E5%9D%87%E8%A1%A1%E5%8C%96)
+
+- 像素集中在某一个区域，可以用来改善对比度
+- cv2.equalizeHist()
+
+```python
+img = cv2.imread('opencv/data/WindowsLogo.jpg', 0)
+
+equ = cv2.equalizeHist(img)
+res = np.hstack((img, equ))  # stacking images side-by-side
+cv2.imshow('a',res)
+cv2.waitKey(0)
+cv2.destroyAllWindows
+```
+
+### 9.4clahe
+
+cv2.createCLAHE()
+
+- 将图片分成不同小块（tiles，default8*8）
+- 避免噪声放大，设置threshold of bin
+- 去除tiles的边界，使用双线性差值
+
+```python
+import numpy as np
+import cv2
+
+img = cv2.imread('opencv/data/8.jpg', 0)
+# create a CLAHE object (Arguments are optional).
+clahe10 = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(10, 10))
+clahe100 = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(100, 100))
+clahe1 = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(1, 1))
+cl1 = clahe1.apply(img)
+cl10 = clahe10.apply(img)
+cl100 = clahe100.apply(img)
+
+cv2.imshow(winname='tsukuba_l.png', mat=img)
+cv2.imshow(winname='10.jpg', mat=cl10)
+cv2.imshow(winname='100.jpg', mat=cl100)
+cv2.imshow(winname='1.jpg', mat=cl1)
+cv2.waitKey(-1)
+```
+
+### 9.5 2D-hist与绘制
+
+- 1d: 灰度图
+- 2d：彩色图，转换到HSV空间
+- 同时处理H和S：channels = [0,1], bins = [180,256]
+
+```python
+hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+hist = cv2.calcHist([hsv], [0, 1], None, [180, 256], [0, 180, 0, 256])
+```
+
+- 绘制: 仍使用plt，x是S值，y是H值
+
+```python
+hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+hist = cv2.calcHist([hsv], [0, 1], None, [180, 256], [0, 180, 0, 256])
+
+plt.imshow(hist, interpolation='nearest')
+plt.show()
+```
+
+### 9.6 反向投影
+
+[back_projection](https://blog.csdn.net/qq_27923041/article/details/82703685): 先生成目标对象直方图，将直方图投影到图像中做匹配，找到概率
+
+- 可以用做图像分割，或者用来找ROI。
+- 每一个像素值代表属于目标的概率
+- 经常与camshift等一起使用
+
+```python
+dst = cv2.calcBackProject([hsv_dst], [0, 1], roi_hist, [0, 180, 0, 256], 1)
+```
+
+## 10.模板匹配
+
+[top](#Opencv(3)图像处理)
+
+-  cv2.matchTemplate(), cv2.minMaxLoc()
+
+```python
+res = cv2.matchTemplate(img, template, method)
+min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+'''
+methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR',
+           'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']
+cv2.TM_SQDIFF ------平方差匹配法(最好匹配0)
+cv2.TM_SQDIFF_NORMED ------归一化平方差匹配法(最好匹配0)
+cv2.TM_CCORR ------相关匹配法(最坏匹配0)
+cv2.TM_CCORR_NORMED ------归一化相关匹配法(最坏匹配0)
+cv2.TM_CCOEFF ------系数匹配法(最好匹配1)
+cv2.TM_CCOEFF_NORMED ------化相关系数匹配法(最好匹配1)
+'''
+```
+
+- 多对象: 使用阈值筛选
+
+```python
+res = cv2.matchTemplate(img_gray, template, cv2.TM_CCOEFF_NORMED)
+threshold = 0.8
+loc = np.where(res >= threshold)
+```
+
+## 11.[霍夫变换](https://github.com/Lloyd-S/AI_LearningPath/blob/master/P2-GSF101/Convolution%26HoghTransform.md)
+
+[top](#Opencv(3)图像处理)
+
+- 之前要进行二值化或者canny边缘检测
+
+### 11.1直线检测
+
+```python
+lines = cv2.HoughLines(edges, 0.1, np.pi / 180, 200)
+```
+
+### 11.2 Probabilistic Hough
+
+- 从图像中随机选取点集
+- threshold需要相应降低
+
+```python
+import cv2
+import numpy as np
+
+img = cv2.imread('opencv/data/sudoku.jpg')
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+edges = cv2.Canny(gray, 50, 150, apertureSize=3)
+
+minLineLength = 100# 线的最短长度
+maxLineGap = 10# 两条线的最大间隔（小于则会被看作一条直线）
+
+lines = cv2.HoughLinesP(edges, 1, np.pi / 180, 100, minLineLength, maxLineGap)
+
+for line in lines:
+    x1, y1, x2, y2 = line[0]
+    cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+cv2.imshow("houghlines3.jpg", img)
+cv2.waitKey(0)
+```
+
+### 11.3圆环变换
+
+- cv2.HoughCircles()
+- 使用霍夫梯度法，累加器由3维降为2维
+
+```python
+HoughCircles(image, method, dp, minDist[, circles[, param1[, param2[, minRadius[, maxRadius]]]]]) -> circles
+```
+
+## 12.[傅里叶变换](https://zhuanlan.zhihu.com/p/19759362)
+
+[top](#Opencv(3)图像处理)
+
+- 边界和噪声：频率较大
 
 
 
