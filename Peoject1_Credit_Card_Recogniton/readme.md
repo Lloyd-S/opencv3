@@ -50,17 +50,17 @@ The whole project can be narrowed down into 5 parts:
 
 ### 3.Cases
 
-Case 1: Card 1, 3-6
+**Case 1: Card 1, 3-6**
 
 - They all have 'dark' background, and it turns out that the tophat technique fulfill image processing need.
 - Regarding iteration: card 1 do not require any iteration, while the rest four cards require 2 iterations 
 - Card 3-6 can share exactly the same parameters/codes, no need to tune.
 
-Case 2: Card 2
+**Case 2: Card 2**
 
 - The blackhat with 2 iterations would successfully detect the digit on it.
 
-Case 3: Card 3
+**Case 3: Card 7**
 
 - It has both bright and dark part, so I divide the card into dark ROI(roi_2) and bright ROI(roi_1&3) as below:
 
