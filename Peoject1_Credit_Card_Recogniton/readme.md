@@ -78,3 +78,112 @@ Case 4: The unsolved case - card 8
 - This project succeed in locating all the 16 digits on this card. By Canny-->dilation,  the digits are evenly divided into for groups, and the first 2 groups have pretty clear shapes, so that I can locate all the individual digits by assuming(which is also the truth) groups, and the digits in each group, are evenly separated. The result is shown above.
 - This project fails in template matching in this case. I've tried all the above methods in case 1-3 and found the best contours/image come from blackhat. Then I tried to tune several key parameters. including: the kernel size and type, the roi size, the iteration times, the threshold values. In the end, I could only correctly recognize 5 digits out of 16 as the best result.
 - If anyone can provide a better solution for this case, pls contact/at me on GiuHub. Thx in advance. 
+
+### 4.Update 1
+
+In the previous program, I manually selected the ROI (ROI = gray[135:165,:]). Thus, this update uses cv2.boundingRect to find where the digits locate.
+
+Below shows the design:
+
+- Using Gaussian Blur to reduce the noise
+- Using Canny edge detector and then dilate it
+- Find the external contours (cv2.RETE_EXTERNAL) and the corresponding bonding rectangles. Locate the digit groups(4 digits form a group) by (x,y,w,h) of the bonding rectangles.
+- Filtering the bonding rectangles by  w$\in$(60,77), h$\in$(22,27)
+
+Below show the code (line 158-179 from the py file):
+
+```python
+def find_roi(image,a=3):
+    rectKernel=cv2.getStructuringElement(cv2.MORPH_RECT,(9,3))
+    blur = cv2.GaussianBlur(image, (5, 5), 0)
+    canny = cv2.Canny(blur,200,250)
+    dilation = cv2.dilate(canny, rectKernel)
+    cnt = cv2.findContours(dilation,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)[0]
+    locs = []
+    for i in cnt:
+        x,y,w,h = cv2.boundingRect(i)
+        if w>60 and w<77 and h>22 and h<27:
+            locs.append((x,y,w,h))
+        locs = sorted(locs, key=lambda x: x[0], reverse=False)
+    height = 0
+    y_axis = 0
+    for (x,y,w,h) in locs:
+        height +=h
+        y_axis += y
+    height = round(height/len(locs)) 
+    y_start = round(y_axis/len(locs))-a
+    y_end = height +y_start+2*a
+    roi = image[y_start:y_end,:]
+    return roi
+```
+
+### 5.Update 2
+
+The previous program manually selected the digit template (2 templates used in total). Now, I use both of the templates to do the matching, then select the one with larger  correlation coefficients (TM_CCOEFF_NORMED) as the final results.
+
+Below shows the design:
+
+- Do the matching with both 2 templates, and the results are saved in result_1 and result_2
+- Compare the correlation coefficients gained by 2 templates of every digit (16 digits in total). The times of template 1 has larger CC is a, and template 2 is b
+- if a>b, use template 1(result_1); Vice versa
+
+Below show the code (line 60-94 or 95-129 from the py file):
+
+```python
+def match_template(locs,digits1,digits2,iters=1):
+    results = []
+    results_1 = []
+    results_2 = []
+    a=0
+    b=0
+    rectKernel=cv2.getStructuringElement(cv2.MORPH_RECT,(9,3))
+    for i,(x,y,w,h) in enumerate(locs):
+        image = gray[y-2:y+h+2,x-2:x+w+2]
+        hat_image = cv2.morphologyEx(image,cv2.MORPH_TOPHAT,rectKernel,iterations=iters)
+        dst = cv2.resize(hat_image,(48,64))
+
+        sorts_1 = []
+        sorts_2 = []
+        
+        for j,temp in enumerate(digits1.values()):
+            result_temp1 = cv2.matchTemplate(dst,temp,cv2.TM_CCOEFF_NORMED)
+            min_val, max_val1, min_loc, max_loc = cv2.minMaxLoc(result_temp1)
+            sorts_1.append(max_val1)
+        results_1.append(str(np.argmax(sorts_1)))
+
+        for j2,temp2 in enumerate(digits2.values()):
+            result_temp2 = cv2.matchTemplate(dst,temp2,cv2.TM_CCOEFF_NORMED)
+            min_val2,max_val2,min_loc2,max_loc2=cv2.minMaxLoc(result_temp2)
+            sorts_2.append(max_val2)
+        results_2.append(str(np.argmax(sorts_2)))
+        if (np.max(sorts_1) >= np.max(sorts_2)):
+            a+=1
+        elif (np.max(sorts_1) < np.max(sorts_2)):
+            b+=1
+    if a>b:
+        results = results_1
+    else:
+        results = results_2
+    return results
+```
+
+ps: previous code
+
+```python
+#previous
+def match_template(locs,digits,iters=1):
+    results = []
+    rectKernel=cv2.getStructuringElement(cv2.MORPH_RECT,(9,3))
+    for i,(x,y,w,h) in enumerate(locs):
+        image = gray[y-2:y+h+2,x-2:x+w+2]
+        hat_image = cv2.morphologyEx(image,cv2.MORPH_TOPHAT,rectKernel,iterations=iters)
+        dst = cv2.resize(hat_image,(48,64))
+        sorts = []
+        for j,temp in enumerate(digits.values()):
+            result = cv2.matchTemplate(dst,temp,cv2.TM_CCOEFF_NORMED)
+            min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+            sorts.append(max_val)
+        results.append(str(np.argmax(sorts)))
+    return results
+```
+
