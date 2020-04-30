@@ -43,7 +43,7 @@ And since the main purpose is to organize my own notes and make it convenient fo
 
 #### Project 1: OCR- Credit Card Recognition
 
-- [readme]((https://github.com/Lloyd-S/opencv3/tree/master/Peoject1_Credit_Card_Recogniton))
+- [readme](https://github.com/Lloyd-S/opencv3/blob/master/Peoject1_Credit_Card_Recogniton/readme.md)
 - [read me\(cn\)](https://github.com/Lloyd-S/opencv3/blob/master/Peoject1_Credit_Card_Recogniton/readme(%E4%B8%AD%E6%96%87).md)
 
 - [code](https://github.com/Lloyd-S/opencv3/blob/master/Peoject1_Credit_Card_Recogniton/card_recog_final.py)
