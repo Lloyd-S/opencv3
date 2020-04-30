@@ -6,8 +6,8 @@
 
 ### 1.1转换
 
-- cv2中有150+转换，由flag确定，但常用的是BGR2GREY 和BGR2HSV.
-- cv2.cvtColor(img, cv2.COLOR_BGR2GREY/cv2.BGR2HSV)
+- cv2中有150+转换，由flag确定，但常用的是BGR2GRAY 和BGR2HSV.
+- cv2.cvtColor(img, cv2.COLOR_BGR2GRAY/cv2.BGR2HSV)
 
 ```python
 import cv2 
