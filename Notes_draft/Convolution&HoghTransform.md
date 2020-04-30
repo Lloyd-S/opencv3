@@ -2,7 +2,7 @@
 
 [Toc]
 
-# Convolution
+## Convolution
 
 #### 1.continuous formula
 
@@ -88,3 +88,10 @@ $$
 
 - Hough gradient direction：对于平面图形，将累加器降成2维。
 
+
+
+## 傅里叶变换
+
+## [refernce](https://zhuanlan.zhihu.com/p/19759362)
+
+- 边界和噪声：频率较大
