@@ -2,7 +2,7 @@
 
 ## 0.Description of This Repository
 
-This repo contains information about the basic functions and skills of opencv(version 4.2). 
+This repo, which is mostly self-contained with several references, contains information about the basic functions and skills of opencv(version 4.2). 
 
 There are two main references used throughout the whole project.
 
@@ -12,6 +12,8 @@ There are two main references used throughout the whole project.
 The main purpose of the repository is to record where I was during my own learning path. Thus, the language I use is Chinese or English (sometimes, a combination of both), which largely depends on the language that my reference uses.
 
 And since the main purpose is to organize my own notes and make it convenient for future reviews, there might be some grammar/typing mistakes or lack of basic information, which I prefer not to spend my time in solving.
+
+Ps: the default file type is markdown, however, if it had mathematical formulas, I would put the links to its pdf format. And you can find the corresponding .md file in the same('Notes') folder.
 
 ## 1.Fundamentals - GUI basis and core operations
 
